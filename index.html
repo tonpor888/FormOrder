@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>วิทยาการคอมพิวเตอร์ - ร้านค้าที่ระลึก</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .gradient-light {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .animated-bg {
+            position: relative;
+            overflow: hidden;
+        }
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #1e40af, #3b82f6, #60a5fa, #93c5fd, #2563eb, #1d4ed8);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -2;
+        }
+        .animated-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"><animate attributeName="cy" values="20;80;20" dur="3s" repeatCount="indefinite"/></circle><circle cx="40" cy="40" r="1.5" fill="rgba(255,255,255,0.15)"><animate attributeName="cy" values="40;10;40" dur="4s" repeatCount="indefinite"/></circle><circle cx="60" cy="60" r="2.5" fill="rgba(255,255,255,0.08)"><animate attributeName="cy" values="60;90;60" dur="5s" repeatCount="indefinite"/></circle><circle cx="80" cy="30" r="1" fill="rgba(255,255,255,0.2)"><animate attributeName="cy" values="30;70;30" dur="3.5s" repeatCount="indefinite"/></circle></svg>');
+            animation: float 20s linear infinite;
+            z-index: -1;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-100px); }
+        }
+        .stats-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Bar -->
+    <nav class="gradient-bg shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo and Title -->
+                <div class="flex items-center space-x-4">
+                    <img src="https://www.cs.mju.ac.th/assets/logo.aa2240c2.png" alt="Maejo University Logo" class="h-12 w-12">
+                    <div>
+                        <h1 class="text-white text-lg font-bold leading-tight">วิทยาการคอมพิวเตอร์</h1>
+                        <p class="text-white text-sm opacity-90">มหาวิทยาลัยแม่โจ้</p>
+                    </div>
+                </div>
+                
+                <!-- Cart Button -->
+                <div class="relative">
+                    <button onclick="showCart()" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition duration-300 flex items-center space-x-2">
+                        <span>🛒</span>
+                        <span>ตะกร้า</span>
+                        <div id="cartBadge" class="cart-badge" style="display: none;">0</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Shopping Page -->
+    <div class="min-h-screen animated-bg py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-white mb-4">🎉 ครบรอบ 30 ปี วิทยาการคอมพิวเตอร์ 🎉</h1>
+                <p class="text-white text-lg mb-8">สินค้าที่ระลึกคุณภาพดี ราคาพิเศษ</p>
+                
+                <!-- Product Statistics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
+                    <div class="stats-card rounded-xl p-4 text-white">
+                        <div class="text-2xl font-bold" id="availableCount">0</div>
+                        <div class="text-sm opacity-90">📦 สินค้าพร้อมจำหน่าย</div>
+                    </div>
+                    <div class="stats-card rounded-xl p-4 text-white">
+                        <div class="text-2xl font-bold text-yellow-300" id="lowStockCount">0</div>
+                        <div class="text-sm opacity-90">⚠️ สินค้าใกล้หมด (≤5 ชิ้น)</div>
+                    </div>
+                    <div class="stats-card rounded-xl p-4 text-white">
+                        <div class="text-2xl font-bold text-red-300" id="outOfStockCount">0</div>
+                        <div class="text-sm opacity-90">❌ สินค้าหมด</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12" id="productGrid">
+                <!-- Products will be generated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="bg-white rounded-xl p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">🛒 ตะกร้าสินค้า</h2>
+                <button onclick="closeCart()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <div id="cartItems" class="space-y-4 mb-6">
+                <!-- Cart items will be generated by JavaScript -->
+            </div>
+
+            <div id="cartEmpty" class="text-center py-8 text-gray-500" style="display: none;">
+                <div class="text-6xl mb-4">🛒</div>
+                <p>ตะกร้าของคุณว่างเปล่า</p>
+            </div>
+
+            <div id="cartSummary" class="border-t pt-6" style="display: none;">
+                <div class="space-y-3">
+                    <div class="flex justify-between text-lg">
+                        <span>ยอดรวม:</span>
+                        <span id="subtotal" class="font-semibold">฿0</span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <label class="text-sm font-medium">รหัสส่วนลด:</label>
+                        <input type="text" id="discountCode" placeholder="ตัวอย่าง: csmju" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <button onclick="applyDiscount()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                            ใช้
+                        </button>
+                    </div>
+                    
+                    <div id="discountInfo" class="text-green-600 text-sm" style="display: none;">
+                        ส่วนลด: <span id="discountAmount">฿0</span>
+                    </div>
+                    
+                    <div class="flex justify-between text-xl font-bold border-t pt-3">
+                        <span>ยอดสุทธิ:</span>
+                        <span id="total" class="text-blue-600">฿0</span>
+                    </div>
+                    
+                    <button onclick="showCheckout()" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:shadow-lg transition duration-300 mt-4">
+                        💳 จ่ายเงิน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">📝 ข้อมูลการสั่งซื้อ</h2>
+                <button onclick="closeCheckout()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <form id="checkoutForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ชื่อ-นามสกุล *</label>
+                    <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="กรุณาระบุชื่อ-นามสกุล">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ที่อยู่ *</label>
+                    <textarea required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows="3" placeholder="ที่อยู่สำหรับจัดส่ง"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">เบอร์โทรศัพท์ *</label>
+                    <input type="tel" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="0xx-xxx-xxxx">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">อัพโหลดสลิปการโอนเงิน *</label>
+                    <input type="file" required accept="image/*" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">วันที่สั่งซื้อ *</label>
+                    <input type="date" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">วิธีการรับสินค้า *</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="delivery" value="pickup" required class="mr-2">
+                            <span>รับที่คณะ</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="delivery" value="delivery" required class="mr-2">
+                            <span>จัดส่งทางไปรษณีย์</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">วิธีการชำระเงิน *</label>
+                    <select required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">เลือกวิธีการชำระเงิน</option>
+                        <option>โอนเงินผ่านธนาคาร</option>
+                        <option>PromptPay</option>
+                        <option>อื่นๆ</option>
+                    </select>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">สรุปการสั่งซื้อ</h3>
+                    <div class="text-sm space-y-1" id="orderSummary">
+                        <!-- Order summary will be generated -->
+                    </div>
+                    <div class="border-t pt-2 mt-2 font-bold">
+                        ยอดสุทธิ: <span id="finalTotal">฿0</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full gradient-bg text-white py-3 rounded-lg font-semibold hover:shadow-lg transition duration-300">
+                    ✅ ยืนยันการสั่งซื้อ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
+            <div class="text-6xl mb-4">✅</div>
+            <h3 class="text-2xl font-bold text-green-600 mb-4">สำเร็จ!</h3>
+            <p class="text-gray-600 mb-6">ส่งคำสั่งซื้อสำเร็จ! เราจะติดต่อกลับภายใน 24 ชั่วโมง</p>
+            <button onclick="closeSuccessModal()" class="gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition duration-300">
+                ตกลง
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Product data
+        const products = [
+            { id: 1, name: 'เสื้อที่ระลึก', price: 350, stock: 25, emoji: '👕', description: 'เสื้อยืดคุณภาพลายครบรอบ 30 ปี' },
+            { id: 2, name: 'กระเป๋าเป้', price: 650, stock: 15, emoji: '🎒', description: 'กระเป๋าเป้สำหรับนักศึกษา' },
+            { id: 3, name: 'แก้วน้ำ', price: 250, stock: 30, emoji: '☕', description: 'แก้วเก็บความเย็น พร้อมโลโก้' },
+            { id: 4, name: 'หมวก', price: 300, stock: 20, emoji: '🧢', description: 'หมวกแก๊ป ปักโลโก้คณะ' },
+            { id: 5, name: 'ร่ม', price: 450, stock: 12, emoji: '☂️', description: 'ร่มพับ กันแดด กันฝน' },
+            { id: 6, name: 'เข็มกลัด', price: 150, stock: 50, emoji: '📌', description: 'เข็มกลัดโลโก้คณะ' },
+            { id: 7, name: 'สมุดโน้ต', price: 200, stock: 35, emoji: '📓', description: 'สมุดโน้ตปกแข็ง' },
+            { id: 8, name: 'ปากกา', price: 180, stock: 40, emoji: '🖊️', description: 'ปากกาโลหะ พร้อมกล่อง' }
+        ];
+
+        let cart = [];
+        let discountApplied = false;
+        let discountPercent = 0;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            renderProducts();
+            updateCartBadge();
+            updateProductStats();
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('input[type="date"]').value = today;
+        });
+
+        // Update product statistics
+        function updateProductStats() {
+            const available = products.filter(p => p.stock > 5).length;
+            const lowStock = products.filter(p => p.stock > 0 && p.stock <= 5).length;
+            const outOfStock = products.filter(p => p.stock === 0).length;
+            
+            document.getElementById('availableCount').textContent = available;
+            document.getElementById('lowStockCount').textContent = lowStock;
+            document.getElementById('outOfStockCount').textContent = outOfStock;
+        }
+
+        // Render products
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = products.map(product => `
+                <div class="product-card bg-white rounded-xl p-6 card-shadow">
+                    <div class="w-full h-32 bg-blue-50 rounded-lg mb-4 flex items-center justify-center">
+                        <span class="text-4xl">${product.emoji}</span>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">${product.name}</h3>
+                    <p class="text-gray-600 mb-3">${product.description}</p>
+                    <p class="text-blue-600 font-bold text-xl mb-2">฿${product.price}</p>
+                    <p class="text-sm text-gray-500 mb-4">เหลือ ${product.stock} ชิ้น</p>
+                    <button onclick="addToCart(${product.id})" 
+                            class="w-full gradient-bg text-white py-2 rounded-lg font-semibold hover:shadow-lg transition duration-300 ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                            ${product.stock === 0 ? 'disabled' : ''}>
+                        ${product.stock === 0 ? 'สินค้าหมด' : '🛒 เพิ่มลงตะกร้า'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Add to cart
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            if (product.stock === 0) {
+                showOutOfStockModal();
+                return;
+            }
+
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                if (existingItem.quantity < product.stock) {
+                    existingItem.quantity++;
+                } else {
+                    alert('สินค้าไม่เพียงพอ');
+                    return;
+                }
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            updateCartBadge();
+            showAddedToCartAnimation();
+        }
+
+        // Show out of stock modal
+        function showOutOfStockModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
+                    <div class="text-6xl mb-4">😔</div>
+                    <h3 class="text-2xl font-bold text-red-600 mb-4">ขออภัย</h3>
+                    <p class="text-gray-600 mb-6">สินค้าหมดชั่วคราว<br>กรุณาลองใหม่อีกครั้งในภายหลัง</p>
+                    <button onclick="this.closest('.modal').remove()" class="bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition duration-300">
+                        ตกลง
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (modal.parentNode) {
+                    modal.remove();
+                }
+            }, 3000);
+        }
+
+        // Update cart badge
+        function updateCartBadge() {
+            const badge = document.getElementById('cartBadge');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (totalItems > 0) {
+                badge.textContent = totalItems;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Show cart
+        function showCart() {
+            renderCart();
+            document.getElementById('cartModal').classList.add('show');
+        }
+
+        // Close cart
+        function closeCart() {
+            document.getElementById('cartModal').classList.remove('show');
+        }
+
+        // Render cart
+        function renderCart() {
+            const cartItems = document.getElementById('cartItems');
+            const cartEmpty = document.getElementById('cartEmpty');
+            const cartSummary = document.getElementById('cartSummary');
+
+            if (cart.length === 0) {
+                cartItems.innerHTML = '';
+                cartEmpty.style.display = 'block';
+                cartSummary.style.display = 'none';
+                return;
+            }
+
+            cartEmpty.style.display = 'none';
+            cartSummary.style.display = 'block';
+
+            cartItems.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-2xl">${item.emoji}</span>
+                        <div>
+                            <h4 class="font-semibold">${item.name}</h4>
+                            <p class="text-gray-600">฿${item.price}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="updateQuantity(${item.id}, -1)" class="quantity-btn bg-gray-200 hover:bg-gray-300">-</button>
+                        <span class="font-semibold w-8 text-center">${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)" class="quantity-btn bg-blue-500 text-white hover:bg-blue-600">+</button>
+                        <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700 ml-4">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateCartSummary();
+        }
+
+        // Update quantity
+        function updateQuantity(productId, change) {
+            const item = cart.find(item => item.id === productId);
+            const product = products.find(p => p.id === productId);
+            
+            if (!item) return;
+
+            const newQuantity = item.quantity + change;
+            
+            if (newQuantity <= 0) {
+                removeFromCart(productId);
+                return;
+            }
+            
+            if (newQuantity > product.stock) {
+                alert('สินค้าไม่เพียงพอ');
+                return;
+            }
+
+            item.quantity = newQuantity;
+            updateCartBadge();
+            renderCart();
+        }
+
+        // Remove from cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartBadge();
+            renderCart();
+        }
+
+        // Update cart summary
+        function updateCartSummary() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discountAmount = discountApplied ? Math.floor(subtotal * discountPercent / 100) : 0;
+            const total = subtotal - discountAmount;
+
+            document.getElementById('subtotal').textContent = `฿${subtotal}`;
+            document.getElementById('total').textContent = `฿${total}`;
+            
+            if (discountApplied) {
+                document.getElementById('discountInfo').style.display = 'block';
+                document.getElementById('discountAmount').textContent = `฿${discountAmount}`;
+            } else {
+                document.getElementById('discountInfo').style.display = 'none';
+            }
+        }
+
+        // Apply discount
+        function applyDiscount() {
+            const code = document.getElementById('discountCode').value.toLowerCase();
+            
+            if (code === 'csmju') {
+                discountApplied = true;
+                discountPercent = 10;
+                updateCartSummary();
+                alert('ใช้รหัสส่วนลดสำเร็จ! ลด 10%');
+            } else if (code === '') {
+                alert('กรุณาใส่รหัสส่วนลด');
+            } else {
+                alert('รหัสส่วนลดไม่ถูกต้อง');
+            }
+        }
+
+        // Show checkout
+        function showCheckout() {
+            if (cart.length === 0) return;
+            
+            renderOrderSummary();
+            closeCart();
+            document.getElementById('checkoutModal').classList.add('show');
+        }
+
+        // Close checkout
+        function closeCheckout() {
+            document.getElementById('checkoutModal').classList.remove('show');
+        }
+
+        // Render order summary
+        function renderOrderSummary() {
+            const orderSummary = document.getElementById('orderSummary');
+            const finalTotal = document.getElementById('finalTotal');
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discountAmount = discountApplied ? Math.floor(subtotal * discountPercent / 100) : 0;
+            const total = subtotal - discountAmount;
+
+            orderSummary.innerHTML = cart.map(item => 
+                `<div class="flex justify-between">
+                    <span>${item.name} x${item.quantity}</span>
+                    <span>฿${item.price * item.quantity}</span>
+                </div>`
+            ).join('') + 
+            (discountApplied ? `<div class="flex justify-between text-green-600">
+                <span>ส่วนลด (${discountPercent}%)</span>
+                <span>-฿${discountAmount}</span>
+            </div>` : '');
+
+            finalTotal.textContent = `฿${total}`;
+        }
+
+        // Show added to cart animation
+        function showAddedToCartAnimation() {
+            // Simple feedback - could be enhanced with actual animation
+            const badge = document.getElementById('cartBadge');
+            badge.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                badge.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        // Form submission
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Update stock
+            cart.forEach(item => {
+                const product = products.find(p => p.id === item.id);
+                product.stock -= item.quantity;
+            });
+            
+            // Clear cart
+            cart = [];
+            discountApplied = false;
+            discountPercent = 0;
+            
+            // Update UI
+            updateCartBadge();
+            renderProducts();
+            updateProductStats();
+            closeCheckout();
+            document.getElementById('successModal').classList.add('show');
+        });
+
+        // Close success modal
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('show');
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'967f6f8492792dc0',t:'MTc1Mzk4OTQ0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
